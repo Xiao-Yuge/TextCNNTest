@@ -1,5 +1,5 @@
 # _*_coding:utf-8_*_
-#配置一些训练过程中使用到的超参
+# 配置一些训练过程中使用到的参数
 
 config = {
     'sequence_length': 128,  # 最大文本长度
@@ -21,5 +21,9 @@ config = {
     'vocab_path': './preprocessed_data/vocabs.dict',  # 词典路径
     'checkpoint_path': './checkpoint',  # 模型保存路径
     'log_path': './logs.txt',  # 日志保存路径
-    'random_state': 232
+    'random_state': 232,  # 随机seed
+    'channel_nums': 1,  # 通道个数，可以使用word2vec, fasttext, glove生成的词向量模拟三个通道
+    'filter_size': [3, 4, 5],  # 卷积核长度（宽度为embedding_size）
+    'regularize_lambda': 0.001,  # 正则化惩罚项λ
+    'dropout_rate': 0.3  # dropout rate
 }
