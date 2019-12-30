@@ -32,14 +32,17 @@ def csv_preprocess():
 def item_preprocess(text):
     text = text.split('[知识点：]')[0].replace('知识点：', '')\
                                      .replace('[题目]', '').strip()
+    text = re.sub('【考点精析】.*', '', text)
     text = re.sub('题型:.*', '', text)
-    text = re.sub(r"[\d+\s+\.!\/_,?=\$%\^\)*\(\+\"\'\+——！:；，。？、~@#%……&*（）·¥\-\|\\《》〈〉～A ① B ② C ③ D ④’‘“”：]", "", text)
+    text = re.sub(r"[\d+\s+\.!\/_,?=\$%\^\)*\(\+\"\'\+\]\[——！:∶；，。？"
+                  r"、~@#%……&*（）·¥\-\|\\《》〈〉～A ① B ② C ③ D ④⑤⑥’‘“”：．﹣→°]", "", text)
     text = ' '.join(jieba.cut(text))
     return text
 
 def label_preprocess(text, par_labels):
     text = list(par_labels) + text.split('[知识点：]')[-1].split(',')
-    text = [re.sub(r"[\d+\s+\.!\/_,?=\$%\^\)*\(\+\"\'\+——！:；，。？、~@#%……&*（）·¥\-\|\\《》〈〉～’‘“”]", "", x)
+    text = [re.sub(r"[\d+\s+\.!\/_,?=\$%\^\)*\(\+\"\'\+\]\[——！:∶；，。？"
+                  r"、~@#%……&*（）·¥\-\|\\《》〈〉～A ① B ② C ③ D ④⑤⑥’‘“”：．﹣→°]", "", x)
             for x in text]
     return ' '.join(text)
 
