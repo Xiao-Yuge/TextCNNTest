@@ -27,10 +27,6 @@ def train_word2vec(documents, save_dir):
                          min_count=1, iter=10)
         model.wv.save_word2vec_format(save_dir, binary=True)
 
-def train_glove(documents, save_dir):
-    if not os.path.exists(save_dir):
-        pass
-
 def make_channel(word2index, save_dir):
     models = KeyedVectors.load_word2vec_format(save_dir, binary=True)
     matrix = list()
@@ -57,12 +53,11 @@ def get_data():
                 documents.extend([str(item).split() for item in csv['items'].to_list()])
     return documents
 
-if __name__ == "__main__":
+def make_channels():
     word2index, index2word, label2index, index2label = load_vocabs()
     documents = get_data()
     model_path = config.get('preprocessed_path')
     fasttext_model_path = os.path.join(model_path, 'fast_text.model')
-    glove_model_path = os.path.join(model_path, 'glove.model')
     w2v_model_path = os.path.join(model_path, 'word2vec.model')
 
     train_fasttext(documents, fasttext_model_path)
@@ -70,3 +65,7 @@ if __name__ == "__main__":
 
     fasttext_matrix = make_channel(word2index, fasttext_model_path)
     w2v_matrix = make_channel(word2index, w2v_model_path)
+    return np.array([fasttext_matrix, w2v_matrix])
+
+if __name__ == "__main__":
+    channels = make_channels()

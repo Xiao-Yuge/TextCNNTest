@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow import keras
 from config import config
+from make_channels import make_channels
 
 class TextCNN(keras.models.Model):
     def __init__(self, matrixes=None):
@@ -28,7 +29,7 @@ class TextCNN(keras.models.Model):
     def make_multichannel_layers(self):
         # 生成多通道embedding
         channels = 0
-        if not self.matrixes:
+        if self.matrixes is None:
             embedding = keras.layers.Embedding(self.vocab_size, self.embedding_size,
                                                 embeddings_initializer=keras.initializers.glorot_uniform,
                                                 input_length=sequence_length)
@@ -78,8 +79,5 @@ if __name__ == "__main__":
     vocab_size = config.get('vocab_size')
     embedding_size = config.get('embedding_size')
     inputs = np.random.random((batch_sz, sequence_length))
-    matrix1 = np.random.random((vocab_size, embedding_size))
-    matrix2 = np.random.random((vocab_size, embedding_size))
-    matrix3 = np.random.random((vocab_size, embedding_size))
-    text_cnn = TextCNN([matrix1, matrix2, matrix3])
+    text_cnn = TextCNN(make_channels())
     output = text_cnn(inputs)

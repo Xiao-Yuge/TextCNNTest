@@ -63,7 +63,7 @@ def generate_vocab():
     for label in labels:
         label_words.extend(label.split())
     # baseline用词频代表词的重要性，后期优化可以使用如tf-idf等其他统计表示方法
-    item_words = Counter(item_words).most_common(config.get('vocab_size'))
+    item_words = Counter(item_words).most_common(config.get('vocab_size')-1)
     label_words = Counter(label_words)
     word2index = {'UNK': 0}
     index2word = {0: 'UNK'}
