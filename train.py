@@ -23,7 +23,7 @@ def operate_logs(ifconsole, logs):
     if ifconsole:
         print(logs)
 
-# @tf.function
+@tf.function
 def train_step(X, y, model, loss_object, optimizer, accuracy_object):
     with tf.GradientTape() as tape:
         output = model(X)
@@ -52,7 +52,7 @@ def train():
         decay_rate=0.8,
         staircase=True
     )
-    optimizer = tf.keras.optimizers.Adam()
+    optimizer = tf.keras.optimizers.Adam(lr_schedule)
     loss_object = tf.keras.losses.BinaryCrossentropy()
     accuracy_object = tf.keras.metrics.CategoricalAccuracy()
     initial_matrix = make_channels()
@@ -62,7 +62,7 @@ def train():
                                          config.get('checkpoint_path'),
                                          max_to_keep=config.get('num_checkpoint'))
     loss, accuracy = 0, 0
-
+    operate_logs(True, "--"*25+"training started"+"--"*25)
     for i, batch in enumerate(batches):
         X, Y = np.array(batch[0]), np.array(batch[1])
         if (i+1) % config.get('evaluate_every') == 0:
@@ -81,9 +81,10 @@ def train():
         batch_loss, batch_accuracy = train_step(X, Y, text_cnn, loss_object, optimizer, accuracy_object)
         loss += batch_loss
         accuracy += batch_accuracy
-        operate_logs(config.get('log_device_placement'),
+        operate_logs(False,
                      "step {}, train loss:{:.2f}, train accuracy:{:.2f}"
                      .format(str(i), batch_loss, batch_accuracy))
+    operate_logs(True, "--" * 25 + "training finished" + "--" * 25)
 
 if __name__ == "__main__":
     train()

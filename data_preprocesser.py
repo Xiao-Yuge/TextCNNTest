@@ -8,7 +8,7 @@ import jieba
 from collections import Counter
 import pickle
 
-CSV_PREPROCESSED = os.listdir(config.get('preprocessed_path'))
+CSV_PREPROCESSED = os.path.exists(config.get('preprocessed_path')) and os.listdir(config.get('preprocessed_path'))
 
 def csv_preprocess():
     '''处理原始数据'''
