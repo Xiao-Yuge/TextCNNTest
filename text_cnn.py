@@ -21,7 +21,7 @@ class TextCNN(keras.models.Model):
         self.conv2ds_pools = list()
         self.flatten = keras.layers.Flatten(data_format='channels_last')
         self.dropout = keras.layers.Dropout(rate=dropout_rate)
-        self.dense = keras.layers.Dense(units=num_classes, activation='softmax',
+        self.dense = keras.layers.Dense(units=num_classes, activation='sigmoid',
                                         kernel_initializer=keras.initializers.constant(0.1),
                                         kernel_regularizer=keras.regularizers.l2(regularize_lambda),
                                         bias_regularizer=keras.regularizers.l2(regularize_lambda))

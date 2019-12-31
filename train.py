@@ -1,6 +1,5 @@
 # _*_coding:utf-8_*_
 import tensorflow as tf
-from tensorflow import keras
 import time
 import matplotlib.pyplot as plt
 
@@ -9,8 +8,13 @@ from config import config
 from make_channels import make_channels
 from text_cnn import TextCNN
 
-def validate(X, y, model, loss_object):
-    pass
+def validate(X, y, model, loss_object, accuracy_object):
+    output = model(X)
+    one_hot = tf.reduce_sum(tf.one_hot(y, config.get('all_classes')), axis=1)
+    loss = loss_object(one_hot, output)
+    accuracy_object.update_state(one_hot, output)
+    accuracy = accuracy_object.result()
+    return loss, accuracy
 
 def operate_logs(ifconsole, logs):
     log_path = config.get('log_path')
@@ -19,7 +23,7 @@ def operate_logs(ifconsole, logs):
     if ifconsole:
         print(logs)
 
-@tf.function
+# @tf.function
 def train_step(X, y, model, loss_object, optimizer, accuracy_object):
     with tf.GradientTape() as tape:
         output = model(X)
@@ -27,10 +31,10 @@ def train_step(X, y, model, loss_object, optimizer, accuracy_object):
         loss = loss_object(one_hot, output)
         accuracy_object.update_state(one_hot, output)
         accuracy = accuracy_object.result()
-    variables = model.trainable_variables
-    gradient = tape.gradient(loss, variables)
-    optimizer.apply_gradients(zip(gradient, variables))
-    return loss, accuracy
+        variables = model.trainable_variables
+        gradient = tape.gradient(loss, variables)
+        optimizer.apply_gradients(zip(gradient, variables))
+        return loss, accuracy
 
 def train():
     if not CSV_PREPROCESSED:
@@ -48,8 +52,8 @@ def train():
         decay_rate=0.8,
         staircase=True
     )
-    optimizer = tf.keras.optimizers.Adam(lr_schedule)
-    loss_object = tf.keras.losses.CategoricalCrossentropy()
+    optimizer = tf.keras.optimizers.Adam()
+    loss_object = tf.keras.losses.BinaryCrossentropy()
     accuracy_object = tf.keras.metrics.CategoricalAccuracy()
     initial_matrix = make_channels()
     text_cnn = TextCNN(initial_matrix)
@@ -62,7 +66,7 @@ def train():
     for i, batch in enumerate(batches):
         X, Y = np.array(batch[0]), np.array(batch[1])
         if (i+1) % config.get('evaluate_every') == 0:
-            evaluate_loss, evaluate_accuracy = train_step(x_val, y_val, text_cnn, loss_object, optimizer, accuracy_object)
+            evaluate_loss, evaluate_accuracy = validate(x_val, y_val, text_cnn, loss_object, accuracy_object)
             operate_logs(config.get('log_device_placement'),
                         "{}:  step {}, train loss:{:.2f}, train accuracy:{:.2f}, "
                         "evaluate loss:{:.2f}, evaluate accuracy:{:.2f}"\
@@ -77,6 +81,9 @@ def train():
         batch_loss, batch_accuracy = train_step(X, Y, text_cnn, loss_object, optimizer, accuracy_object)
         loss += batch_loss
         accuracy += batch_accuracy
+        operate_logs(config.get('log_device_placement'),
+                     "step {}, train loss:{:.2f}, train accuracy:{:.2f}"
+                     .format(str(i), batch_loss, batch_accuracy))
 
 if __name__ == "__main__":
     train()
