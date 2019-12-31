@@ -2,6 +2,7 @@ import tensorflow as tf
 from tensorflow import keras
 from config import config
 from make_channels import make_channels
+import numpy as np
 
 class TextCNN(keras.models.Model):
     def __init__(self, matrixes=None):
@@ -10,7 +11,7 @@ class TextCNN(keras.models.Model):
         self.embedding_size = config.get('embedding_size')
         self.sequence_length = config.get('sequence_length')
         self.filter_size = config.get('filter_size')
-        num_classes = config.get('num_classes')
+        num_classes = config.get('all_classes')
         regularize_lambda = config.get('regularize_lambda')
         dropout_rate = config.get('dropout_rate')
 
@@ -25,14 +26,12 @@ class TextCNN(keras.models.Model):
                                         kernel_regularizer=keras.regularizers.l2(regularize_lambda),
                                         bias_regularizer=keras.regularizers.l2(regularize_lambda))
 
-
-    def make_multichannel_layers(self):
         # 生成多通道embedding
         channels = 0
         if self.matrixes is None:
             embedding = keras.layers.Embedding(self.vocab_size, self.embedding_size,
                                                 embeddings_initializer=keras.initializers.glorot_uniform,
-                                                input_length=sequence_length)
+                                                input_length=self.sequence_length)
             channels += 1
             self.embeddings.append(embedding)
         else:
@@ -48,13 +47,12 @@ class TextCNN(keras.models.Model):
                                          strides=(1, 1), padding='valid', data_format='channels_last',
                                          activation='relu',kernel_initializer='glorot_uniform',
                                          bias_initializer=keras.initializers.constant(0.1))
-            pool = keras.layers.MaxPool2D(pool_size=(sequence_length - filter_size + 1, 1), strides=(1, 1),
+            pool = keras.layers.MaxPool2D(pool_size=(self.sequence_length - filter_size + 1, 1), strides=(1, 1),
                                           padding='valid', data_format='channels_last')
             self.conv2ds_pools.append([conv2d, pool])
 
 
     def call(self, inputs):
-        self.make_multichannel_layers()
         embeddings = list()
         for embedding in self.embeddings:
             expand_embedding = tf.expand_dims(embedding(inputs), axis=-1)

@@ -65,6 +65,8 @@ def generate_vocab():
     # baseline用词频代表词的重要性，后期优化可以使用如tf-idf等其他统计表示方法
     item_words = Counter(item_words).most_common(config.get('vocab_size')-1)
     label_words = Counter(label_words)
+    label_words = [label for label in label_words if label_words[label] > 3 and label]
+    config['all_classes'] = len(label_words)  # 将样本总分类数写入到config中
     word2index = {'UNK': 0}
     index2word = {0: 'UNK'}
     for item_word in item_words:
@@ -105,7 +107,7 @@ def split_data(x, y):
     x_train, y_train = x[:int(len(x)*rate[0])], y[:int(len(x)*rate[0])]
     x_test, y_test = x[int(len(x)*rate[0]): int(len(x)*(rate[0]+rate[1]))],\
                      y[int(len(x)*rate[0]): int(len(x)*(rate[0]+rate[1]))]
-    x_val, y_val = x[int(len(x)*(rate[0]+rate[1])):], y[int(len(x)*(rate[0]+rate[1]))]
+    x_val, y_val = x[int(len(x)*(rate[0]+rate[1])):], y[int(len(x)*(rate[0]+rate[1])):]
     return x_train, y_train, x_test, y_test, x_val, y_val
 
 def generate_batches(x, y, shuffle=True):
@@ -120,7 +122,14 @@ def generate_batches(x, y, shuffle=True):
         for batch in range(nums_per_epoch):
             start_index = batch*batch_size
             end_index = min(len(data), batch_size*(batch+1))
-            yield data[start_index: end_index]
+            yield _unzip(data[start_index: end_index])
+
+def _unzip(zip_object):
+    X, y = list(), list()
+    for item in zip_object:
+        X.append(item[0])
+        y.append(item[1])
+    return [X, y]
 
 if __name__ == "__main__":
     if not CSV_PREPROCESSED:

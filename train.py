@@ -9,8 +9,7 @@ from config import config
 from make_channels import make_channels
 from text_cnn import TextCNN
 
-
-def validate(X, y, model, loss_object, accuracy_object):
+def validate(X, y, model, loss_object):
     pass
 
 def operate_logs(ifconsole, logs):
@@ -20,12 +19,18 @@ def operate_logs(ifconsole, logs):
     if ifconsole:
         print(logs)
 
-def train_step(X, y, model, loss_object, accuracy_object):
+@tf.function
+def train_step(X, y, model, loss_object, optimizer, accuracy_object):
     with tf.GradientTape() as tape:
         output = model(X)
-        one_hot = tf.reduce_sum(tf.one_hot(output), axis=1)
+        one_hot = tf.reduce_sum(tf.one_hot(y, config.get('all_classes')), axis=1)
         loss = loss_object(one_hot, output)
-        accuracy_object.update_state(one_hot, y)
+        accuracy_object.update_state(one_hot, output)
+        accuracy = accuracy_object.result()
+    variables = model.trainable_variables
+    gradient = tape.gradient(loss, variables)
+    optimizer.apply_gradients(zip(gradient, variables))
+    return loss, accuracy
 
 def train():
     if not CSV_PREPROCESSED:
@@ -44,8 +49,8 @@ def train():
         staircase=True
     )
     optimizer = tf.keras.optimizers.Adam(lr_schedule)
-    loss_object = tf.keras.losses.SparseCategoricalCrossentropy()
-    accuracy_object = tf.keras.metrics.Accuracy()
+    loss_object = tf.keras.losses.CategoricalCrossentropy()
+    accuracy_object = tf.keras.metrics.CategoricalAccuracy()
     initial_matrix = make_channels()
     text_cnn = TextCNN(initial_matrix)
     checkpoint = tf.train.Checkpoint(optimizer=optimizer, model=text_cnn)
@@ -55,24 +60,23 @@ def train():
     loss, accuracy = 0, 0
 
     for i, batch in enumerate(batches):
-        X = list()
-        Y = list()
-        for x, y in batch:
-            X.append(x)
-            Y.append(y)
-        accuracy += batch_accuracy
-        if i+1 % config.get('evaluate_every') == 0:
-            evaluate_loss, evaluate_accuracy = validate(x_val, y_val, text_cnn, loss_object, accuracy_object)
+        X, Y = np.array(batch[0]), np.array(batch[1])
+        if (i+1) % config.get('evaluate_every') == 0:
+            evaluate_loss, evaluate_accuracy = train_step(x_val, y_val, text_cnn, loss_object, optimizer, accuracy_object)
             operate_logs(config.get('log_device_placement'),
                         "{}:  step {}, train loss:{:.2f}, train accuracy:{:.2f}, "
                         "evaluate loss:{:.2f}, evaluate accuracy:{:.2f}"\
                         .format(str(time.time()), str(i), loss/config.get('evaluate_every'),
                                 accuracy/config.get('evaluate_every'), evaluate_loss, evaluate_accuracy))
             loss, accuracy = 0, 0
-        if i+1 % config.get('checkpoint_every') == 0:
+        if (i+1) % config.get('checkpoint_every') == 0:
             manager.save()
             operate_logs(config.get('log_device_placement'),
                         "{}: step {}, checkpoint file saved." \
                         .format(str(time.time()), str(i)))
-        batch_loss, batch_accuracy = train_step(X, Y, text_cnn, loss_object, accuracy_object)
+        batch_loss, batch_accuracy = train_step(X, Y, text_cnn, loss_object, optimizer, accuracy_object)
         loss += batch_loss
+        accuracy += batch_accuracy
+
+if __name__ == "__main__":
+    train()

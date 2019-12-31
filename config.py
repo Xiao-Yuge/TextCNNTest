@@ -4,6 +4,7 @@
 config = {
     'sequence_length': 128,  # 最大文本长度
     'num_classes': 5,  # 最大分类数
+    'all_classes': 10,  # 样本中总分类数（训练过程修改）
     'vocab_size': 5000,  # 词表大小
     'embedding_size': 512,  # 词向量大小
     'device': '/cpu:0',  # 设备：默认为cpu

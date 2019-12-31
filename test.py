@@ -13,6 +13,10 @@ output = tf.reduce_sum(tf.one_hot(indices, depth), axis=1)
 #   tf.convert_to_tensor([[.9, .05, .05], [.5, .89, .6], [.05, .01, .94]]))
 # print('Loss: ', loss.numpy())
 
-accuracy_object = tf.keras.metrics.Accuracy()
-accuracy_object.update_state(output, tf.convert_to_tensor([[.7, .25, .05], [.05, .79, .16], [.15, .11, .74]]))
-print(accuracy_object.result().numpy())
+s = tf.keras.metrics.CosineSimilarity(axis=0)
+s.update_state(output, tf.convert_to_tensor([[.7, .25, .05], [.05, .79, .16], [.15, .11, .74]]))
+print(s.result())
+
+ss = tf.keras.metrics.CategoricalAccuracy()
+ss.update_state(output, tf.convert_to_tensor([[.7, .25, .05], [.05, .79, .16], [.15, .11, .74]]))
+print(ss.result())
