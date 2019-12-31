@@ -48,8 +48,8 @@ def train():
     initial_lr = config.get('learning_rate')
     lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
         initial_lr,
-        decay_steps=1000,
-        decay_rate=0.8,
+        decay_steps=config.get('lr_decay_steps'),
+        decay_rate=config.get('lr_decay_cate'),
         staircase=True
     )
     optimizer = tf.keras.optimizers.Adam(lr_schedule)

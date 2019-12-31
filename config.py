@@ -17,6 +17,8 @@ config = {
     'log_device_placement': True,  # 是否允许在终端打印日志文件
     'train_test_dev_rate': [0.7, 0.2, 0.1],  # 训练集、测试集、验证集
     'learning_rate': 0.001,  # 学习率
+    'lr_decay_steps': 1000,  # 学习率衰减步长
+    'lr_decay_cate': 0.8,  # 学习率衰减率
     'raw_data_path': './data',  # 数据路径
     'preprocessed_path': './preprocessed_data',  # 数据预处理保存路径
     'vocab_path': './preprocessed_data/vocabs.dict',  # 词典路径
